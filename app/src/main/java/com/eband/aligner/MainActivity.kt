@@ -3,6 +3,8 @@ package com.eband.aligner
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.webkit.GeolocationPermissions
@@ -24,6 +26,25 @@ class MainActivity : AppCompatActivity() {
     private var pendingCameraRequest: PermissionRequest? = null
     private lateinit var deviceBridge: DeviceBridge
     private var maxBrightness = true
+    private var wifiLock: WifiManager.WifiLock? = null
+
+    // Keeps Wi-Fi out of power-save while the app is open, so radio replies arrive
+    // steadily instead of in bursts (some phones buffer Wi-Fi traffic to save battery).
+    @Suppress("DEPRECATION")
+    private fun acquireWifiLock() {
+        if (wifiLock?.isHeld == true) return
+        val wm = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            WifiManager.WIFI_MODE_FULL_LOW_LATENCY else WifiManager.WIFI_MODE_FULL_HIGH_PERF
+        wifiLock = wm.createWifiLock(mode, "EbandAligner:radio").apply {
+            setReferenceCounted(false)
+            try { acquire() } catch (e: Exception) { }
+        }
+    }
+
+    private fun releaseWifiLock() {
+        try { wifiLock?.takeIf { it.isHeld }?.release() } catch (e: Exception) { }
+    }
 
     // Only affects this app's window; Android restores normal brightness when you leave the app.
     private fun applyBrightness() {
@@ -142,12 +163,14 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         deviceBridge.stop()
+        releaseWifiLock()
         webView.onPause()
     }
 
     override fun onResume() {
         super.onResume()
         deviceBridge.start()
+        acquireWifiLock()
         webView.onResume()
     }
 
