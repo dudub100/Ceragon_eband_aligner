@@ -23,6 +23,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private var pendingCameraRequest: PermissionRequest? = null
     private lateinit var deviceBridge: DeviceBridge
+    private var maxBrightness = true
+
+    // Only affects this app's window; Android restores normal brightness when you leave the app.
+    private fun applyBrightness() {
+        val lp = window.attributes
+        lp.screenBrightness = if (maxBrightness) 1.0f
+            else WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+        window.attributes = lp
+    }
     private var pendingGeo: Pair<String, GeolocationPermissions.Callback>? = null
 
     private val locationPermissionLauncher =
@@ -44,6 +53,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        maxBrightness = getSharedPreferences("ui", MODE_PRIVATE).getBoolean("maxBright", true)
+        applyBrightness()
 
         webView = WebView(this)
         setContentView(webView)
@@ -111,7 +122,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.addJavascriptInterface(RadioBridge(this, webView), "RadioBridge")
-        deviceBridge = DeviceBridge(applicationContext)
+        deviceBridge = DeviceBridge(applicationContext) { on ->
+            runOnUiThread {
+                maxBrightness = on
+                getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("maxBright", on).apply()
+                applyBrightness()
+            }
+        }
         webView.addJavascriptInterface(deviceBridge, "DeviceBridge")
         webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html")
 

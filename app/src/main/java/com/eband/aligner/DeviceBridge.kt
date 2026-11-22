@@ -25,7 +25,10 @@ import kotlin.math.max
  *  - magnetic declination for a location (Android's built-in World Magnetic Model)
  *  - real field of view of a camera lens
  */
-class DeviceBridge(private val context: Context) : SensorEventListener {
+class DeviceBridge(
+    private val context: Context,
+    private val onMaxBrightness: (Boolean) -> Unit = {}
+) : SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val rotationSensor: Sensor? =
@@ -93,6 +96,10 @@ class DeviceBridge(private val context: Context) : SensorEventListener {
     } catch (e: Exception) {
         -1.0
     }
+
+    /** Full screen brightness while the app is in front (the phone's own setting is not changed). */
+    @JavascriptInterface
+    fun setMaxBrightness(on: Boolean) = onMaxBrightness(on)
 
     @JavascriptInterface
     fun openExternal(url: String) {
