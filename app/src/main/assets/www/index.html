@@ -122,6 +122,23 @@ body.coarse-mode #camWrap canvas { display: none; }
 #camHostFine { text-align: center; }
 #camHostFine canvas { border-radius: 6px; }
 
+/* ---------- DEMO RSL warning ---------- */
+#demoBanner { display: none; position: fixed; left: 0; right: 0; top: 52px; z-index: 35; height: 34px; align-items: center; justify-content: center;
+    background: repeating-linear-gradient(45deg, #e65100, #e65100 14px, #f57c00 14px, #f57c00 28px); color: #fff; font-weight: 800; font-size: 14px;
+    letter-spacing: .3px; border: 0; width: 100%; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+body.demo #demoBanner { display: flex; animation: demoPulse 1.6s ease-in-out infinite; }
+@keyframes demoPulse { 50% { filter: brightness(1.25); } }
+body.demo main { padding-top: 98px; }
+body.demo.coarse-mode #demoBanner { top: 0; }
+body.demo.coarse-mode #page-coarse.active { top: 34px; }
+body.demo.coarse-mode main { padding-top: 0; }
+.demo-tag { display: none; background: #e65100; color: #fff; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+body.demo .demo-tag { display: inline-block; }
+.seg { display: flex; gap: 8px; margin-top: 10px; }
+.seg button { flex: 1; padding: 11px 6px; border-radius: 6px; border: 2px solid #cfd6e2; background: #fff; font-weight: 700; color: #6b7a90; }
+.seg button.on-live { border-color: #2e7d32; background: #e8f5e9; color: #2e7d32; }
+.seg button.on-demo { border-color: #e65100; background: #fff3e0; color: #e65100; }
+
 /* ---------- Toast ---------- */
 #status { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: rgba(20,30,45,.92); color: #fff;
     padding: 9px 14px; border-radius: 8px; font-size: 14px; z-index: 60; display: none; max-width: 90vw; text-align: center; }
@@ -145,6 +162,7 @@ body.coarse-mode #camWrap canvas { display: none; }
   <div class="title" id="pageTitle">Home</div>
 </header>
 
+<button id="demoBanner" data-go="home">⚠ DEMO RSL – NOT from the radio</button>
 <div id="scrim"></div>
 <nav id="drawer">
   <div class="drawer-head">
@@ -168,12 +186,21 @@ body.coarse-mode #camWrap canvas { display: none; }
   <!-- ================= HOME ================= -->
   <section class="page" id="page-home">
     <div class="card">
-      <div class="home-label">RSL (Received Signal Level)</div>
+      <div class="home-label">RSL Source</div>
+      <div class="seg">
+        <button id="srcLive">Live from radio</button>
+        <button id="srcDemo">Demo (simulated)</button>
+      </div>
+      <div class="hint" id="srcHint"></div>
+    </div>
+    <div class="card">
+      <div class="home-label">RSL (Received Signal Level)<span class="demo-tag">DEMO</span></div>
       <div class="home-val" id="homeRsl">--</div>
       <div class="gauge"><div class="mark" id="homeRslMark" style="left:0%"></div></div>
       <div class="kv"><span class="k">Target RSL</span><span class="v" id="homeTarget">--</span></div>
       <div class="small-note" id="homeRslSource">Simulated</div>
     </div>
+    <div class="hint" id="buildInfo" style="text-align:center; margin:4px 0 12px;"></div>
     <div class="card">
       <h3>Target Direction</h3>
       <div class="kv"><span class="k">Azimuth (true)</span><span class="v" id="homeTAz">--</span></div>
@@ -295,7 +322,7 @@ body.coarse-mode #camWrap canvas { display: none; }
       <div class="kv"><span class="k">Az Offset</span><span class="v" id="cAzOff">--</span></div>
       <div class="kv"><span class="k">El Offset</span><span class="v" id="cElOff">--</span></div>
       <div class="cal"><span id="calGood" class="off">Calibrated</span><span id="calBad" class="off">Low Accuracy</span></div>
-      <div class="coarse-rsl-label">Current RSL</div>
+      <div class="coarse-rsl-label">Current RSL<span class="demo-tag">DEMO</span></div>
       <div class="coarse-rsl" id="cRsl">--</div>
       <button class="cbtn blue" data-go="home">Done</button>
       <div class="zero-box" id="cZeroBox">Zero Azimuth: --<br>Zero Elevation: --</div>
@@ -318,7 +345,7 @@ body.coarse-mode #camWrap canvas { display: none; }
       <div>
         <div class="card">
           <div class="kv"><span class="k" id="fCurLabel">Current azimuth</span><span class="v" id="fCurAngle">0.0°</span></div>
-          <div class="kv"><span class="k">Current RSL</span><span class="big" id="fRsl">--</span></div>
+          <div class="kv"><span class="k">Current RSL<span class="demo-tag">DEMO</span></span><span class="big" id="fRsl">--</span></div>
           <div class="kv"><span class="k">Target RSL</span><span class="v" id="fTarget">--</span></div>
           <div class="small-note" id="fReached" style="font-weight:700;">Not Reached</div>
           <div class="hint" id="rslStats"></div>
@@ -359,7 +386,7 @@ body.coarse-mode #camWrap canvas { display: none; }
     <div class="card">
       <h3>Device</h3>
       <div class="field"><label>Device name (shown in the title bar)</label><input id="setDeviceName" autocomplete="off"></div>
-      <label class="check"><input type="checkbox" id="rslToggle"> <b>Live radio RSL polling</b> (off = simulated RSL)</label>
+      <label class="check"><input type="checkbox" id="rslToggle"> <b>Live radio RSL polling</b> (off = DEMO simulated RSL)</label>
     </div>
     <div class="card">
       <h3>Radio Connection</h3>
@@ -377,6 +404,8 @@ body.coarse-mode #camWrap canvas { display: none; }
       <div class="field"><label>Poll interval (ms)</label><input id="setPollMs" type="number" min="100" step="100"></div>
       <button class="btn primary" id="saveSettingsBtn">Save</button>
       <button class="btn" id="testRslBtn">Test RSL read</button>
+      <button class="btn soft" id="restoreDefaultsBtn">Restore default connection settings</button>
+      <div class="hint">Defaults: 192.168.200.66 · HTTPS with self-signed certificate · admin / admin · RSL table path and column of the radio · poll every 200 ms.</div>
     </div>
     <div class="card">
       <h3>REST Console</h3>
@@ -429,7 +458,7 @@ body.coarse-mode #camWrap canvas { display: none; }
             ip: '192.168.200.66', port: '', https: 'true', trustAll: 'true',
             user: 'admin', pass: 'admin',
             rslPath: '/tables/rf-rsl-status-table?deviceId=0&columns=rf-rsl-status-rsl',
-            jsonPath: 'data.0.values.0.0', rslColumn: 'rf-rsl-status-rsl', pollMs: '500'
+            jsonPath: 'data.0.values.0.0', rslColumn: 'rf-rsl-status-rsl', pollMs: '200'
         };
         if (hasBridge) {
             try { radioSettings = Object.assign(radioSettings, JSON.parse(window.RadioBridge.getSettings())); } catch (e) {}
@@ -459,7 +488,7 @@ body.coarse-mode #camWrap canvas { display: none; }
                 rslPath: $('setRslPath').value.trim() || '/',
                 jsonPath: $('setJsonPath').value.trim(),
                 rslColumn: $('setRslColumn').value.trim(),
-                pollMs: String(Math.max(100, parseInt($('setPollMs').value) || 500))
+                pollMs: String(Math.max(100, parseInt($('setPollMs').value) || 200))
             };
             if (hasBridge) window.RadioBridge.saveSettings(JSON.stringify(radioSettings));
         }
@@ -1195,7 +1224,7 @@ body.coarse-mode #camWrap canvas { display: none; }
         // ===================== PHONE ORIENTATION (native sensors) =====================
         // DeviceBridge.getOrientation() returns the direction the BACK CAMERA points:
         // az = degrees from magnetic north, el = degrees above horizon (any phone orientation).
-        const ori = { az: NaN, el: NaN, acc: -1, hacc: NaN, sx: 0, sy: 0, init: false };
+        const ori = { az: NaN, el: NaN, acc: -1, hacc: NaN, sx: 0, sy: 0, init: false, R: null };
         function pollOrientation() {
             if (!hasDevice) return;
             let o;
@@ -1206,6 +1235,10 @@ body.coarse-mode #camWrap canvas { display: none; }
             if (!ori.init) { ori.sx = s; ori.sy = c; ori.el = o.el; ori.init = true; }
             else { ori.sx += a * (s - ori.sx); ori.sy += a * (c - ori.sy); ori.el += a * (o.el - ori.el); }
             ori.az = wrap360(Math.atan2(ori.sx, ori.sy) * R2D);
+            if (Array.isArray(o.R) && o.R.length === 9) {
+                if (!ori.R) ori.R = o.R.slice();
+                else for (let i = 0; i < 9; i++) ori.R[i] += a * (o.R[i] - ori.R[i]);
+            }
             ori.acc = isNum(o.acc) ? o.acc : -1;
             ori.hacc = isNum(o.hacc) ? o.hacc : NaN;
         }
@@ -1373,6 +1406,13 @@ body.coarse-mode #camWrap canvas { display: none; }
             $('calGood').className = cal ? 'on-good' : 'off';
             $('calBad').className = cal ? 'off' : 'on-bad';
         }
+        // Screen rotation relative to the phone's natural (portrait) orientation
+        function screenAngle() {
+            let a = 0;
+            if (screen.orientation && typeof screen.orientation.angle === 'number') a = screen.orientation.angle;
+            else if (typeof window.orientation === 'number') a = window.orientation;
+            return ((a % 360) + 360) % 360;
+        }
         function drawCoarseOverlay() {
             const svg = $('camOverlay');
             const W = video.clientWidth, H = video.clientHeight;
@@ -1384,11 +1424,26 @@ body.coarse-mode #camWrap canvas { display: none; }
             if (linkCache && isNum(ca)) {
                 const f = (Math.max(W, H) / 2) / Math.tan(baseLongEdgeFOV / 2 * D2R);
                 const azO = wrap180(ca - linkCache.az), elO = ce - linkCache.el;
-                const clampA = v => Math.max(-85, Math.min(85, v));
-                const tx = cx - Math.tan(clampA(azO) * D2R) * f;
-                const ty = cy + Math.tan(clampA(elO) * D2R) * f;
                 const col = (Math.abs(azO) <= 1 && Math.abs(elO) <= 1) ? '#2ecc71' : '#ff3b3b';
-                if (tx >= 0 && tx <= W && ty >= 0 && ty <= H) {
+                let tx, ty, behind = false;
+                if (ori.R) {
+                    // Project the target direction through the phone's full rotation, so the marker is
+                    // correct in portrait, landscape and when the phone is rolled.
+                    const azM = (linkCache.az - declCache) * D2R;          // magnetic azimuth
+                    const elR = (linkCache.el + P.tiltOffset) * D2R;       // as the uncompensated sensor sees it
+                    const w = [Math.cos(elR) * Math.sin(azM), Math.cos(elR) * Math.cos(azM), Math.sin(elR)];
+                    const R = ori.R;
+                    const d = [R[0] * w[0] + R[3] * w[1] + R[6] * w[2], R[1] * w[0] + R[4] * w[1] + R[7] * w[2], R[2] * w[0] + R[5] * w[1] + R[8] * w[2]];
+                    const th = screenAngle() * D2R, rc = Math.cos(th), rs = Math.sin(th);
+                    const u = d[0] * rc - d[1] * rs, v = d[0] * rs + d[1] * rc;   // screen right / up
+                    if (d[2] < -1e-3) { tx = cx + f * u / -d[2]; ty = cy - f * v / -d[2]; }
+                    else { behind = true; const L = Math.hypot(u, v) || 1; tx = cx + 1e6 * u / L; ty = cy - 1e6 * v / L; }
+                } else {
+                    const clampA = v => Math.max(-85, Math.min(85, v));
+                    tx = cx - Math.tan(clampA(azO) * D2R) * f;
+                    ty = cy + Math.tan(clampA(elO) * D2R) * f;
+                }
+                if (!behind && tx >= 0 && tx <= W && ty >= 0 && ty <= H) {
                     out += `<g stroke="${col}" stroke-width="2.5"><line x1="${tx - 26}" y1="${ty}" x2="${tx + 26}" y2="${ty}"/><line x1="${tx}" y1="${ty - 26}" x2="${tx}" y2="${ty + 26}"/></g>` +
                            `<circle cx="${tx}" cy="${ty}" r="10" fill="none" stroke="${col}" stroke-width="2"/>`;
                 } else {
@@ -1441,9 +1496,22 @@ body.coarse-mode #camWrap canvas { display: none; }
                 ctx.fillText('C', x, chart.chartArea.top - 5); ctx.restore();
             }
         };
+        const demoWatermark = {
+            id: 'demoWatermark',
+            beforeDatasetsDraw(chart) {
+                if (!document.body.classList.contains('demo')) return;
+                const a = chart.chartArea, ctx = chart.ctx;
+                ctx.save();
+                ctx.fillStyle = 'rgba(230,81,0,0.13)';
+                ctx.font = `900 ${Math.max(28, Math.min(a.width / 4, 90))}px sans-serif`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText('DEMO', (a.left + a.right) / 2, (a.top + a.bottom) / 2);
+                ctx.restore();
+            }
+        };
         let rslChart = new Chart($('rslChart').getContext('2d'), {
             type: 'scatter',
-            plugins: [cLabelPlugin],
+            plugins: [cLabelPlugin, demoWatermark],
             data: {
                 datasets: [
                     { label: 'Increasing', data: [], backgroundColor: '#1e88e5', borderColor: '#1e88e5', pointRadius: 2.2 },
@@ -1658,8 +1726,47 @@ body.coarse-mode #camWrap canvas { display: none; }
 
         // ===================== RSL POLLING =====================
         let rslToggle = $('rslToggle');
-        rslToggle.checked = lsGet('livePoll', '0') === '1';
-        rslToggle.addEventListener('change', () => { lsSet('livePoll', rslToggle.checked ? '1' : '0'); });
+        // Live radio RSL is the default; DEMO must be chosen deliberately and is flagged everywhere
+        rslToggle.checked = lsGet('livePoll', '1') === '1';
+        function setLive(live) {
+            rslToggle.checked = live;
+            lsSet('livePoll', live ? '1' : '0');
+            if (!live) { samplesBy.az = []; samplesBy.el = []; }   // never mix demo and real points
+            else { samplesBy.az = []; samplesBy.el = []; }
+            suggested.az = suggested.el = null; dirCentroids.az = dirCentroids.el = null; curPoint = null;
+            if (page === 'fine') { rebuildChart(); updateFineStats(); updateSuggested(); }
+            applySourceUi();
+        }
+        function applySourceUi() {
+            const live = rslToggle.checked;
+            document.body.classList.toggle('demo', !live);
+            $('srcLive').className = live ? 'on-live' : '';
+            $('srcDemo').className = live ? '' : 'on-demo';
+            $('srcHint').innerText = live ? `Reading RSL from the radio at ${radioSettings.ip} every ${radioSettings.pollMs} ms.`
+                : 'DEMO: RSL values are simulated. Do NOT use them to align a real link.';
+            if (typeof rslChart !== 'undefined') rslChart.update();
+        }
+        rslToggle.addEventListener('change', () => {
+            if (!rslToggle.checked && !confirm('Switch to DEMO RSL?\n\nRSL values will be SIMULATED, not read from the radio.')) { rslToggle.checked = true; return; }
+            setLive(rslToggle.checked);
+        });
+        $('srcLive').addEventListener('click', () => setLive(true));
+        $('srcDemo').addEventListener('click', () => {
+            if (!rslToggle.checked) return;
+            if (confirm('Switch to DEMO RSL?\n\nRSL values will be SIMULATED, not read from the radio.')) setLive(false);
+        });
+        const RADIO_DEFAULTS = { ip: '192.168.200.66', port: '', https: 'true', trustAll: 'true', user: 'admin', pass: 'admin',
+            rslPath: '/tables/rf-rsl-status-table?deviceId=0&columns=rf-rsl-status-rsl', jsonPath: 'data.0.values.0.0',
+            rslColumn: 'rf-rsl-status-rsl', pollMs: '200' };
+        $('restoreDefaultsBtn').addEventListener('click', () => {
+            if (!confirm('Restore the default radio connection settings?')) return;
+            radioSettings = Object.assign({}, radioSettings, RADIO_DEFAULTS);
+            if (hasBridge) window.RadioBridge.saveSettings(JSON.stringify(radioSettings));
+            fillSettingsForm(); applySourceUi();
+            toast('Default connection settings restored');
+        });
+        $('saveSettingsBtn').addEventListener('click', () => setTimeout(applySourceUi, 0));
+        applySourceUi();
         $('setDeviceName').value = P.deviceName;
         $('setDeviceName').addEventListener('change', () => { P.deviceName = $('setDeviceName').value.trim() || 'IP-50EX'; saveP('deviceName'); setTitle(); });
 
@@ -1680,13 +1787,14 @@ body.coarse-mode #camWrap canvas { display: none; }
         function updateRslViews() {
             const v = rslNow, live = rslToggle.checked;
             const txt = isNum(v) ? v.toFixed(1) + ' dBm' : (rslErr ? 'Error' : '--');
-            $('homeRsl').innerText = txt; $('homeRsl').style.color = rslColor(v);
+            if (!live) { $('homeRsl').style.color = '#e65100'; }
+            $('homeRsl').innerText = txt; $('homeRsl').style.color = live ? rslColor(v) : '#e65100';
             $('homeRslMark').style.left = isNum(v) ? Math.max(0, Math.min(100, (v + 90) / 70 * 100)) + '%' : '0%';
             $('homeTarget').innerText = fmtDbm(P.targetRsl);
-            $('homeRslSource').innerText = !live ? 'Simulated RSL (enable live polling in Radio Connection)' :
+            $('homeRslSource').innerText = !live ? 'DEMO – simulated RSL, not from the radio' :
                 (rslErr ? 'Radio error: ' + rslErr : 'Live from ' + radioSettings.ip);
-            $('cRsl').innerText = txt; $('cRsl').style.color = isNum(v) ? (v >= -50 ? '#2ecc71' : v >= -65 ? '#f5a623' : '#ff4d4d') : '#aaa';
-            $('fRsl').innerText = txt; $('fRsl').style.color = rslColor(v);
+            $('cRsl').innerText = txt; $('cRsl').style.color = !live ? '#ff9d3b' : isNum(v) ? (v >= -50 ? '#2ecc71' : v >= -65 ? '#f5a623' : '#ff4d4d') : '#aaa';
+            $('fRsl').innerText = txt; $('fRsl').style.color = live ? rslColor(v) : '#e65100';
             $('fTarget').innerText = fmtDbm(P.targetRsl);
             const reached = isNum(v) && v >= P.targetRsl;
             $('fReached').innerText = reached ? 'Target Reached' : 'Not Reached';
@@ -1728,7 +1836,7 @@ body.coarse-mode #camWrap canvas { display: none; }
         }
         async function pollLoop() {
             try { await pollOnce(); } catch (e) { console.error(e); }
-            setTimeout(pollLoop, parseInt(radioSettings.pollMs) || 500);
+            setTimeout(pollLoop, parseInt(radioSettings.pollMs) || 200);
         }
 
         // ===================== MAIN UI LOOP =====================
@@ -1745,6 +1853,13 @@ body.coarse-mode #camWrap canvas { display: none; }
                 else if (page === 'fine') updateFineAngle();
             }
         }
+
+        // ===================== BUILD INFO =====================
+        const APP_BUILD = '2026-11-23';
+        (() => {
+            const m = /Chrome\/([\d.]+)/.exec(navigator.userAgent);
+            $('buildInfo').innerText = `App build ${APP_BUILD} · WebView ${m ? m[1] : 'unknown'}`;
+        })();
 
         // ===================== START =====================
         recalc();
