@@ -1,6 +1,9 @@
 package com.eband.aligner
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -25,6 +28,19 @@ import javax.net.ssl.X509TrustManager
 class RadioBridge(context: Context, private val webView: WebView) {
 
     private val prefs = context.getSharedPreferences("radio_settings", Context.MODE_PRIVATE)
+    private val connectivity = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+    /**
+     * The radio's Wi-Fi has no internet, so some phones (e.g. Xiaomi) send traffic over
+     * mobile data instead, or switch back and forth. Requests to the radio are therefore
+     * always sent explicitly over the Wi-Fi network when one is connected.
+     */
+    @Suppress("DEPRECATION")
+    private fun wifiNetwork(): Network? = try {
+        connectivity.allNetworks.firstOrNull { n ->
+            connectivity.getNetworkCapabilities(n)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+        }
+    } catch (e: Exception) { null }
     private val executor = Executors.newFixedThreadPool(2)
 
     private val defaults = mapOf(
@@ -37,7 +53,7 @@ class RadioBridge(context: Context, private val webView: WebView) {
         "rslPath" to "/tables/rf-rsl-status-table?deviceId=0&columns=rf-rsl-status-rsl",
         "jsonPath" to "data.0.values.0.0",
         "rslColumn" to "rf-rsl-status-rsl",
-        "pollMs" to "500"
+        "pollMs" to "200"
     )
 
     private fun setting(key: String): String = prefs.getString(key, null) ?: defaults[key] ?: ""
@@ -85,7 +101,7 @@ class RadioBridge(context: Context, private val webView: WebView) {
         val p = if (path.startsWith("/")) path else "/$path"
         val url = URL("$scheme://$ip$portPart$p")
 
-        val conn = url.openConnection() as HttpURLConnection
+        val conn = (wifiNetwork()?.openConnection(url) ?: url.openConnection()) as HttpURLConnection
         if (conn is HttpsURLConnection && setting("trustAll") == "true") {
             conn.sslSocketFactory = trustAllFactory
             conn.hostnameVerifier = HostnameVerifier { _, _ -> true }
