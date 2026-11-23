@@ -36,6 +36,8 @@ class DeviceBridge(
     private val magSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
     private val rot = FloatArray(9)
 
+    @Volatile private var rotCopy = FloatArray(9)
+    @Volatile private var haveRot = false
     @Volatile private var azimuth = Double.NaN
     @Volatile private var elevation = Double.NaN
     @Volatile private var magAccuracy = -1
@@ -51,6 +53,7 @@ class DeviceBridge(
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_ROTATION_VECTOR) return
         SensorManager.getRotationMatrixFromVector(rot, event.values)
+        rotCopy = rot.copyOf(); haveRot = true
         // rot maps device axes to world (x = East, y = North, z = Up).
         // The back camera looks along the device's -Z axis.
         val east = -rot[2].toDouble()
@@ -76,6 +79,9 @@ class DeviceBridge(
         o.put("el", if (elevation.isNaN()) JSONObject.NULL else elevation)
         o.put("acc", magAccuracy)
         o.put("hacc", if (headingAccuracyDeg.isNaN()) JSONObject.NULL else headingAccuracyDeg)
+        // Full device->world rotation (row-major; world x = East, y = magnetic North, z = Up),
+        // used to project the target into the camera image for any phone orientation.
+        if (haveRot) o.put("R", org.json.JSONArray(rotCopy.map { it.toDouble() }))
         return o.toString()
     }
 
